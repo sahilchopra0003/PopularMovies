@@ -25,4 +25,23 @@ class MoviesViewTests {
         verify(view).showError("", false)
         verify(view).showNoDataLabel(false)
     }
+
+    @Test
+    fun `render fetch success state`() {
+        // Setup
+        val moviesList = listOf<Movie>(
+            Movie(1, "Dhoni", "Movie on player"),
+            Movie(2, "Deadpool", "Action comedy dark comedy"),
+            Movie(3, "Avengers", "Sci-Fi")
+        )
+        val successState = MoviesState(moviesList, FetchAction.SUCCESSFUL, null)
+
+        // Act
+        view.render(successState)
+
+        // Assert
+        verify(view).showLoadingView(false)
+        verify(view).showError("", false)
+        verify(view).showNoDataLabel(false)
+    }
 }
