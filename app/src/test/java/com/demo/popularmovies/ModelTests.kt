@@ -65,7 +65,7 @@ class ModelTests {
     // Setup
     val errorMsg = "Oops! Something went wrong."
 
-    val loadingState = MoviesState(emptyList(), FetchAction.IN_FLIGHT, null)
+    val loadingState = MoviesState.INITIAL
     val errorState = MoviesState(emptyList(), FetchAction.FAILED, errorMsg)
 
     Mockito.`when`(repository.getMovies())
