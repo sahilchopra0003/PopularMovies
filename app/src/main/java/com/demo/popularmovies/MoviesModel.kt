@@ -6,12 +6,14 @@ import io.reactivex.rxkotlin.withLatestFrom
 object MoviesModel {
   fun bind(
       lifecycle: Observable<MviLifecycle>,
+      userIntentions: MoviesIntention,
       repository: CachedRepository,
       previousStates: Observable<MoviesState>
   ): Observable<MoviesState> {
     return Observable.merge(
         lifecycleCreatedUsecase(lifecycle, repository),
-        lifecycleResumedUsecase(lifecycle, previousStates)
+        lifecycleResumedUsecase(lifecycle, previousStates),
+        refreshListUseCase(userIntentions, repository)
     )
   }
 
@@ -36,5 +38,17 @@ object MoviesModel {
         .filter { it == MviLifecycle.RESUMED }
         .withLatestFrom(previousStates)
         .map { (_, previousState) -> previousState }
+  }
+
+  fun refreshListUseCase(
+      userIntentions: MoviesIntention,
+      repository: CachedRepository
+  ): Observable<MoviesState> {
+    return userIntentions.refreshEvents
+        .switchMap {
+          repository
+              .getMovies()
+              .map { MoviesState(it.result ?: emptyList(), it.fetchAction, it.error) }
+        }
   }
 }

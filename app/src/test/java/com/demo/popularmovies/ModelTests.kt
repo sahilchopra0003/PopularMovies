@@ -11,6 +11,8 @@ import org.mockito.Mockito.`when`
 
 class ModelTests {
   lateinit var lifecycleEvents: PublishSubject<MviLifecycle>
+  lateinit var refreshEvents: PublishSubject<Unit>
+  lateinit var userIntentions: MoviesIntention
   lateinit var repository: CachedRepository
   lateinit var previousStates: BehaviorSubject<MoviesState>
   lateinit var observer: TestObserver<MoviesState>
@@ -19,6 +21,8 @@ class ModelTests {
   @Before
   fun setup() {
     lifecycleEvents = PublishSubject.create()
+    refreshEvents = PublishSubject.create()
+    userIntentions = MoviesIntention(refreshEvents)
     repository = Mockito.mock(CachedRepository::class.java)
     previousStates = BehaviorSubject.create()
 
@@ -29,7 +33,7 @@ class ModelTests {
     )
 
     observer = MoviesModel
-        .bind(lifecycleEvents, repository, previousStates)
+        .bind(lifecycleEvents, userIntentions, repository, previousStates)
         .doOnNext { previousStates.onNext(it) }
         .test()
   }
@@ -80,16 +84,46 @@ class ModelTests {
     // Setup
     Mockito
         .`when`(repository.getMovies())
-        .thenReturn(Observable.just(FetchEvent(FetchAction.SUCCESSFUL, moviesList, null)
+        .thenReturn(Observable.just(
+            FetchEvent(FetchAction.IN_FLIGHT, emptyList(), null),
+            FetchEvent(FetchAction.SUCCESSFUL, moviesList, null)
         ))
 
-    val state = MoviesState(moviesList, FetchAction.SUCCESSFUL, null)
+    val loadingState = MoviesState.INITIAL
+    val stateWithData = MoviesState(moviesList, FetchAction.SUCCESSFUL, null)
 
     // Act
     lifecycleEvents.onNext(MviLifecycle.CREATED)
     lifecycleEvents.onNext(MviLifecycle.RESUMED)
 
     // Assert
-    observer.assertValues(state, state)
+    observer.assertValues(loadingState, stateWithData, stateWithData)
+  }
+
+  @Test
+  fun `User should see the refreshed list when clicks on retry`() {
+    // Setup
+    val errorMsg = "Oops! Something went wrong."
+    Mockito
+        .`when`(repository.getMovies())
+        .thenReturn(Observable.just(
+            FetchEvent(FetchAction.IN_FLIGHT, null, null),
+            FetchEvent(FetchAction.FAILED, null, errorMsg)
+        ))
+        .thenReturn(Observable.just(
+            FetchEvent(FetchAction.IN_FLIGHT, null, null),
+            FetchEvent(FetchAction.SUCCESSFUL, moviesList, null)
+        ))
+
+    val loadingState = MoviesState.INITIAL
+    val errorState = MoviesState(emptyList(), FetchAction.FAILED, errorMsg)
+    val stateWithData = MoviesState(moviesList, FetchAction.SUCCESSFUL, null)
+
+    // Act
+    lifecycleEvents.onNext(MviLifecycle.CREATED)
+    refreshEvents.onNext(Unit)
+
+    // Assert
+    observer.assertValues(loadingState, errorState, loadingState, stateWithData)
   }
 }
