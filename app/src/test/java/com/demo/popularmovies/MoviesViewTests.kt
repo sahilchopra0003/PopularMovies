@@ -44,4 +44,19 @@ class MoviesViewTests {
         verify(view).showError("", false)
         verify(view).showNoDataLabel(false)
     }
+
+    @Test
+    fun `render failed state`() {
+        // Setup
+        val errorMsg = "Oops! Something went wrong!"
+        val failedState = MoviesState(emptyList(), FetchAction.FAILED, errorMsg)
+
+        // Act
+        view.render(failedState)
+
+        // Assert
+        verify(view).showLoadingView(false)
+        verify(view).showError(errorMsg, true)
+        verify(view).showNoDataLabel(false)
+    }
 }
