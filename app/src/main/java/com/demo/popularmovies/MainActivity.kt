@@ -15,14 +15,14 @@ const val KEY_STATE = "State"
 
 class MainActivity : AppCompatActivity(), MoviesView {
 
-    lateinit var lifecycleStage: MviLifecycle
-    val lifecycleEvents = PublishSubject.create<MviLifecycle>()
-    val refreshEvents = PublishSubject.create<Unit>()
-    val userIntentions = MoviesIntention(refreshEvents)
-    val cachedRepository = CachedRepositoryImpl(RestApi.getService())
-    val previousStates = BehaviorSubject.create<MoviesState>()
-    val compositeDisposable = CompositeDisposable()
-    lateinit var moviesListAdapter: MoviesListAdapter
+    private lateinit var lifecycleStage: MviLifecycle
+    private val lifecycleEvents = PublishSubject.create<MviLifecycle>()
+    private val refreshEvents = PublishSubject.create<Unit>()
+    private val userIntentions = MoviesIntention(refreshEvents)
+    private val cachedRepository = CachedRepositoryImpl(RestApi.getService(), AppDatabase(this))
+    private val previousStates = BehaviorSubject.create<MoviesState>()
+    private val compositeDisposable = CompositeDisposable()
+    private lateinit var moviesListAdapter: MoviesListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +70,8 @@ class MainActivity : AppCompatActivity(), MoviesView {
             progressBar.visibility = VISIBLE
         else
             progressBar.visibility = GONE
+
+        moviesListRecyclerView.visibility = GONE
     }
 
     override fun showNoDataLabel(show: Boolean) {
@@ -81,6 +83,7 @@ class MainActivity : AppCompatActivity(), MoviesView {
             retryTextView.visibility = GONE
         }
         msgTextView.setText("There are no items in the list for now. Please try again later...")
+        moviesListRecyclerView.visibility = GONE
     }
 
     override fun showError(errorMsg: String, show: Boolean) {
@@ -91,10 +94,12 @@ class MainActivity : AppCompatActivity(), MoviesView {
             msgTextView.visibility = GONE
             retryTextView.visibility = GONE
         }
-        msgTextView.setText(errorMsg)
+        msgTextView.text = errorMsg
+        moviesListRecyclerView.visibility = GONE
     }
 
     override fun refreshList(newList: List<Movie>) {
+        moviesListRecyclerView.visibility = VISIBLE
         moviesListAdapter.refreshList(ArrayList(newList))
     }
 }
