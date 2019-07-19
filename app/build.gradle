@@ -8,7 +8,6 @@ apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.0"
     defaultConfig {
         applicationId "com.demo.popularmovies"
         minSdkVersion 15
@@ -56,8 +55,10 @@ dependencies {
     testImplementation "com.google.truth:truth:0.44"
     testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0'
 
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation "org.mockito:mockito-android:2.28.2"
     //Room Testing Dependency
     androidTestImplementation "androidx.room:room-testing:2.1.0"
 }
