@@ -1,6 +1,9 @@
 package com.demo.popularmovies
 
+import android.util.Log
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 
 class CachedRepositoryImpl(val apiService: ApiService, val appDatabase: AppDatabase) : CachedRepository {
 
@@ -14,13 +17,21 @@ class CachedRepositoryImpl(val apiService: ApiService, val appDatabase: AppDatab
 
         val networkEvents = apiService
             .getMovies()
+            .doOnNext { Log.i("123Before SwitchMap", it.toString()) }
             .switchMap { response ->
                 movieDao.insertMovies(response.results)
                 return@switchMap Observable.just(response)
             }
+            .doOnNext { Log.i("123After SwitchMap", it.toString()) }
             .switchMap { Observable.just(FetchEvent(FetchAction.SUCCESSFUL, it.results, null)) }
-            .onErrorReturn { FetchEvent(FetchAction.FAILED, null, "Oops! Something went wrong.") }
+            .onErrorReturn {
+                Log.i("Error SwitchMap", it.toString())
+                FetchEvent(FetchAction.FAILED, null, "Oops! Something went wrong.")
+            }
 
-        return Observable.concat(inFlightEvents, networkEvents)
+        return Observable
+            .concat(inFlightEvents, networkEvents)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
     }
 }
