@@ -23,8 +23,8 @@ interface MoviesView {
 
             FetchAction.FAILED -> {
                 showLoadingView(false)
-                showError(state.error ?: "", true)
                 showNoDataLabel(false)
+                showError(state.error ?: "", true)
                 refreshList(state.movies)
             }
         }
