@@ -28,9 +28,9 @@ class MoviesListAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val movie = moviesList.get(position)
-        holder.title.setText(movie.title)
-        holder.overview.setText(movie.overview)
-        holder.id.setText(movie.id)
+        holder.id.text = movie.id.toString()
+        holder.title.text = movie.title
+        holder.overview.text = movie.overview
     }
 
     fun refreshList(newList: ArrayList<Movie>) {
