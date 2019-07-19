@@ -16,17 +16,24 @@ const val KEY_STATE = "State"
 class MainActivity : AppCompatActivity(), MoviesView {
 
     private lateinit var lifecycleStage: MviLifecycle
-    private val lifecycleEvents = PublishSubject.create<MviLifecycle>()
-    private val refreshEvents = PublishSubject.create<Unit>()
-    private val userIntentions = MoviesIntention(refreshEvents)
-    private val cachedRepository = CachedRepositoryImpl(RestApi.getService(), AppDatabase(this))
-    private val previousStates = BehaviorSubject.create<MoviesState>()
-    private val compositeDisposable = CompositeDisposable()
+    private lateinit var lifecycleEvents: PublishSubject<MviLifecycle>
+    private lateinit var refreshEvents: PublishSubject<Unit>
+    private lateinit var userIntentions: MoviesIntention
+    private lateinit var cachedRepository: CachedRepositoryImpl
+    private lateinit var previousStates: BehaviorSubject<MoviesState>
+    private lateinit var compositeDisposable: CompositeDisposable
     private lateinit var moviesListAdapter: MoviesListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        lifecycleEvents = PublishSubject.create<MviLifecycle>()
+        refreshEvents = PublishSubject.create<Unit>()
+        userIntentions = MoviesIntention(refreshEvents)
+        cachedRepository = CachedRepositoryImpl(RestApi.getService(), AppDatabase(this))
+        previousStates = BehaviorSubject.create<MoviesState>()
+        compositeDisposable = CompositeDisposable()
 
         moviesListRecyclerView.layoutManager = LinearLayoutManager(this)
         moviesListAdapter = MoviesListAdapter(arrayListOf())
